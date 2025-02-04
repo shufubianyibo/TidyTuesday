@@ -1,0 +1,108 @@
+---
+title: "TidyTue1"
+author: "Han Sun"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r include = FALSE}
+palette("Okabe-Ito")
+scale_colour_discrete <- function(...) scale_colour_manual(values = palette())
+scale_fill_discrete   <- function(...) scale_fill_manual(values = palette())
+
+knitr::opts_chunk$set(
+  collapse = TRUE, 
+  warning = FALSE,
+  message = FALSE,
+  fig.height = 2.75, 
+  fig.width = 4.25,
+  fig.env='figure',
+  fig.pos = 'h',
+  fig.align = 'center')
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+```
+
+# Import Data
+```{r}
+exped_tidy <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/exped_tidy.csv')
+peaks_tidy <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/peaks_tidy.csv')
+```
+
+# Which mountain range (HIMAL_FACTOR) has the highest average peak height (HEIGHTM)?
+
+```{r}
+avg_height_by_range <- peaks_tidy %>%
+  group_by(HIMAL_FACTOR) %>%
+  summarize(avg_height = mean(HEIGHTM, na.rm = TRUE)) %>%
+  arrange(desc(avg_height))
+```
+
+```{r}
+ggplot(avg_height_by_range, aes(x = reorder(HIMAL_FACTOR, avg_height), y = avg_height)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +
+  labs(title = "Average Peak Height by Mountain Range",
+       x = "Mountain Range",
+       y = "Average Peak Height (m)") +
+  theme_minimal()
+```
+
+
+
+# What is the distribution of peak heights (HEIGHTM) for peaks that are open (OPEN) versus those that are not?
+
+
+
+```{r}
+peaks_tidy$OPEN <- factor(peaks_tidy$OPEN, levels = c(TRUE, FALSE), labels = c("Open", "Closed"))
+ggplot(peaks_tidy, aes(x = HEIGHTM, fill = OPEN)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of Peak Heights: Open vs. Closed Peaks",
+       x = "Peak Height (m)",
+       y = "Density",
+       fill = "Peak Status") +
+  theme_minimal()
+```
+
+
+
+# Which climbing routes (ROUTE1, ROUTE2, ROUTE3, ROUTE4) have the highest success rates (SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4) across all expeditions?
+
+```{r}
+routes_long <- exped_tidy %>%
+  select(ROUTE1, ROUTE2, ROUTE3, ROUTE4, SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4) %>%
+  pivot_longer(cols = starts_with("ROUTE"), names_to = "Route_Number", values_to = "Route") %>%
+  pivot_longer(cols = starts_with("SUCCESS"), names_to = "Success_Number", values_to = "Success") %>%
+  filter(substr(Route_Number, 6, 6) == substr(Success_Number, 8, 8)) %>%
+  select(Route, Success)
+
+avg_success_by_route <- routes_long %>%
+  group_by(Route) %>%
+  summarize(avg_success_rate = mean(Success, na.rm = TRUE)) %>%
+  arrange(desc(avg_success_rate))%>%
+  na.omit()
+```
+
+```{r}
+ggplot(avg_success_by_route, aes(x = reorder(Route, avg_success_rate), y = avg_success_rate)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Success Rate by Climbing Route",
+       x = "Climbing Route",
+       y = "Average Success Rate") +
+  theme_minimal()
+```
+
+
+#
+
+
+
+
+
+
+
