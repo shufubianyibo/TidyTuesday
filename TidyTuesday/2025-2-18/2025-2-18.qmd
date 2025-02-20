@@ -1,0 +1,122 @@
+---
+title: "TidyTue2"
+author: "Han Sun"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r include = FALSE}
+palette("Okabe-Ito")
+scale_colour_discrete <- function(...) scale_colour_manual(values = palette())
+scale_fill_discrete   <- function(...) scale_fill_manual(values = palette())
+
+knitr::opts_chunk$set(
+  collapse = TRUE, 
+  warning = FALSE,
+  message = FALSE,
+  fig.height = 2.75, 
+  fig.width = 4.25,
+  fig.env='figure',
+  fig.pos = 'h',
+  fig.align = 'center')
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+```
+
+
+```{r}
+agencies <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-18/agencies.csv')
+
+```
+
+How do agency types vary? How are agencies distributed geographically within each state?
+
+```{r}
+agencies_by_type<- agencies%>%
+  group_by(state, agency_type) %>%
+  summarize(n = n(), .groups = "drop")
+```
+
+
+```{r}
+ggplot(agencies_by_type, aes(
+  x = fct_reorder(state, n, .fun = sum), 
+  y = n, 
+  fill = agency_type
+)) +
+  geom_col() + 
+  coord_flip() + 
+  labs(
+    title = "Agencies by State and Type",
+    x = "State",
+    y = "Number of Agencies",
+    fill = "Agency Type"
+  ) +
+  theme_minimal()
+
+```
+
+
+
+
+What percentage of agencies in each state participate in NIBRS reporting? Are there any trends in NIBRS adoption?
+
+```{r}
+agencies %>%
+  group_by(state) %>%
+  summarize(
+    total_agencies = n(),
+    n_nibrs = sum(is_nibrs, na.rm = TRUE),
+    pct_nibrs = mean(is_nibrs, na.rm = TRUE) * 100
+  ) %>%
+  arrange(desc(pct_nibrs))
+
+```
+```{r}
+agencies %>%
+  group_by(state) %>%
+  summarize(pct_nibrs = mean(is_nibrs, na.rm = TRUE)*100) %>%
+  ggplot(aes(x = fct_reorder(state, pct_nibrs), y = pct_nibrs)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Percent of Agencies Participating in NIBRS Reporting by State",
+    x = "State", 
+    y = "Percent NIBRS Participation"
+  ) +
+  theme_minimal()
+
+```
+
+
+```{r}
+agencies_by_year <- agencies %>%
+  mutate(nibrs_year = year(nibrs_start_date))
+
+```
+
+```{r}
+agencies_by_year %>%
+  filter(!is.na(nibrs_year)) %>%
+  count(nibrs_year) %>%
+  ggplot(aes(x = nibrs_year, y = n)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "NIBRS Adoption by Year",
+    x = "Year Agency Started NIBRS",
+    y = "Number of Agencies Adopting"
+  ) +
+  theme_minimal()
+
+```
+
+
+
+
