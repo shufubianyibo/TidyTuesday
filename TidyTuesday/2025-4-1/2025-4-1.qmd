@@ -1,0 +1,102 @@
+---
+title: "2025-4-1"
+format: html
+---
+
+```{r}
+library(dplyr)
+library(readr)
+library(tidyr)   
+library(ggplot2)
+pokemon_df <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-04-01/pokemon_df.csv')
+```
+
+```{r}
+
+pokemon_df_water <- pokemon_df %>%
+  filter(type_1 == "water")%>%
+  group_by(color_f) %>%
+  summarise(count_of_color = n(), .groups = "drop")%>%
+  na.omit(color_f)%>%
+  mutate(percentage = (count_of_color / sum(count_of_color))*100,
+         cumulative_percentage = cumsum(percentage),
+         label_position = cumulative_percentage - 0.5 * percentage)
+  
+water_plot <- ggplot(data = pokemon_df_water, aes(x="", y=percentage, fill = color_f)) +
+  geom_bar(stat="identity", width=1) +
+  scale_fill_identity(
+          guide = "legend", 
+          name = "Pokemon Primary Color" 
+       ) +
+  labs(title = "Color of Water Pokemons")+
+  coord_polar("y", start=0)
+water_plot
+```
+
+
+```{r}
+pokemon_df_grass <- pokemon_df %>%
+  filter(type_1 == "grass")%>%
+  group_by(color_f) %>%
+  summarise(count_of_color = n(), .groups = "drop")%>%
+  na.omit(color_f)%>%
+  mutate(percentage = (count_of_color / sum(count_of_color))*100,
+         cumulative_percentage = cumsum(percentage),
+         label_position = cumulative_percentage - 0.5 * percentage)
+  
+grass_plot <- ggplot(data = pokemon_df_grass, aes(x="", y=percentage, fill = color_f)) +
+  geom_bar(stat="identity", width=1) +
+  scale_fill_identity(
+          guide = "legend", 
+          name = "Pokemon Primary Color" 
+       ) +
+  labs(title = "Color of Grass Pokemons")+
+  coord_polar("y", start=0)
+grass_plot
+```
+
+
+```{r}
+pokemon_df_fire <- pokemon_df %>%
+  filter(type_1 == "fire")%>%
+  group_by(color_f) %>%
+  summarise(count_of_color = n(), .groups = "drop")%>%
+  na.omit(color_f)%>%
+  mutate(percentage = (count_of_color / sum(count_of_color))*100,
+         cumulative_percentage = cumsum(percentage),
+         label_position = cumulative_percentage - 0.5 * percentage)
+  
+fire_plot <- ggplot(data = pokemon_df_fire, aes(x="", y=percentage, fill = color_f)) +
+  geom_bar(stat="identity", width=1) +
+  scale_fill_identity(
+          guide = "legend", 
+          name = "Pokemon Primary Color" 
+       ) +
+  labs(title = "Color of Fire Pokemons")+
+  coord_polar("y", start=0)
+fire_plot
+```
+
+
+```{r}
+library(patchwork)
+design <- "
+AB
+#C
+"
+
+final_plot <- water_plot/grass_plot/fire_plot+ plot_layout(design = design)+plot_annotation(title = 'Primary Color Distributions for Starter Types', theme = theme(
+      plot.title = element_text(
+        hjust = 0.5, 
+        size = 16,  
+        margin = margin(b = 30, unit = "pt"))))
+final_plot
+```
+
+
+
+
+
+
+
+
